@@ -1,4 +1,4 @@
-#requires -version 3
+#requires -version 5
 <#
 .SYNOPSIS
 <Overview of script>
@@ -64,7 +64,7 @@ if (-Not (Test-Path -PathType Container -Path $outdir)) {
 $outstring = [RegEx]::Replace($outstring, "[{0}]" -f ([RegEx]::Escape([String][System.IO.Path]::GetInvalidFileNameChars())), '')
 #>
  
-#-------------[Initialisations]------------------------------------------------
+#-------------[Initializations]------------------------------------------------
  
 #Set Error Action to Silently Continue
 #$ErrorActionPreference = "SilentlyContinue"
@@ -81,7 +81,7 @@ $outstring = [RegEx]::Replace($outstring, "[{0}]" -f ([RegEx]::Escape([String][S
 #$sLogName = "<script_name>.log"
 #$sLogFile = Join-Path -Path $sLogPath -ChildPath $sLogName
  
-# ISO 8601 Date Format. Accept no substuties! 
+# ISO 8601 Date Format. Accept no substitutes! 
 $iso8601 = Get-Date -Format s
 # Colon (:) isn't a valid character in file names.
 $iso8601 = $iso8601.Replace(":","_")
@@ -122,12 +122,12 @@ Function <FunctionName>{
  
 #-------------[Execution]------------------------------------------------------
  
-#Log-Start -LogPath $sLogPath -LogName $sLogName -ScriptVersion $sScriptVersion
-#Script Execution goes here
-#Log-Finish -LogPath $sLogFile
+Start-Transcript -Path "$($env:USERPROFILE) + \$($iso8601)_PowershellTranscript.txt"
  
 <# Pseudocode
  
 Logic, flow, etc.
  
 End Pseudocode #>
+
+End-Transcript
