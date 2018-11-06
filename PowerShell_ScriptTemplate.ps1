@@ -16,10 +16,9 @@
 <Outputs if any, otherwise state None - example: Log file stored in C:\Windows\Temp\<name>.log>
  
 .NOTES
-Version:        0.1
-Author:         <Name>
-Creation Date:  <Date>
-Purpose/Change: Initial script development
+Author: <Name> <email>
+Change History: 
+YYYY-DD-MM: Initial script development
  
 .EXAMPLE
 <Example goes here. Repeat this attribute for more than one example>
@@ -29,13 +28,48 @@ Purpose/Change: Initial script development
 # Enable -Debug, -Verbose Parameters. Write-Debug and Write-Verbose!
 #[CmdletBinding()]
  
+# Advanced Parameters: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-6
+# Be sure to edit this to meet the validatations required as the allows and validate lines below may conflict with each other.  
 <#
 Param (
-    [Parameter(Mandatory=$true)][string]$csv = $( Read-Host "Enter path and filename to CSV file"),
-    [Parameter()][string]$outdir = "$($env:USERPROFILE)\Documents",
-    [Parameter()][string]$outstring = "Example"
+    [Parameter(Mandatory=$true,
+    ValueFromPipeline=$true,
+    Position=0,
+    HelpMessage="Enter a help message for this parameter.")]
+    [alias("Para0","Parameter0")]
+    [AllowNull()] # Allows value of a mandatory parameter to be $null
+    [AllowEmptyString()] # Allows value of a mandatory parameter to be an empty string ("")
+    [AllowEmptyCollection()] # Allows value of a mandatory paramenter to be an empty collection @()
+    [ValidateNotNull()] # Specifies that the parameter value cannot be $null
+    [ValidateNotNullOrEmpty()] # Specifies that the parameter value cannot be $null and cannot be an empty string "". 
+    [ValidateCount(1,5)] # Specifices the minimum and maximum number of parameter values a parameter accepts. Example: Computer1,Computer2,Computer3,Computer4,Computer5
+    [ValidateLength(1,10)] # Specifies the minimum and maximum number of characters in a parameter or variable value. 
+    [ValidatePattern("[0-9][0-9][0-9][0-9]")] # Specifies a regular expression that is compared to the parameter or variable value. 
+    [ValidateRange(0,10)] # Specifies a numeric range for each parameter or variable value. 
+    [ValidateScript({$_ -ge (Get-Date)})] # Specifies a script that is used to validate a parameter or variable value.
+    [ValidateSet("Chocolate", "Strawberry", "Vanilla")] # Specifies a set of valid values for a parameter or variable.
+    [string]$Param0,
+    # Don't forget a comma between parameters. 
+    [Parameter(Mandatory=$true,
+    ValueFromPipeline=$true,
+    Position=1,
+    HelpMessage="Enter a help message for this parameter.")]
+    [alias("Para1","Parameter1")]
+    [AllowNull()]
+    [AllowEmptyString()]
+    [AllowEmptyCollection()]
+    [ValidateCount(1,5)]
+    [ValidateLength(1,10)]
+    [ValidatePattern("[0-9][0-9][0-9][0-9]")]
+    [ValidateRange(0,10)]
+    [ValidateScript({$_ -ge (Get-Date)})]
+    [ValidateSet("Chocolate", "Strawberry", "Vanilla")]
+    [ValidateNotNull()]
+    [ValidateNotNullOrEmpty()]
+    [string]$Param1
 )
 #>
+
  
 #-------------[Parameter Validation]-------------------------------------------
 # Sanitize User Input
@@ -72,15 +106,7 @@ $outstring = [RegEx]::Replace($outstring, "[{0}]" -f ([RegEx]::Escape([String][S
 #Import-Module activedirectory -ErrorAction Stop
  
 #-------------[Declarations]---------------------------------------------------
- 
-#Script Version
-#$sScriptVersion = "0.1"
- 
-#Log File Info
-#$sLogPath = "C:\Windows\Temp"
-#$sLogName = "<script_name>.log"
-#$sLogFile = Join-Path -Path $sLogPath -ChildPath $sLogName
- 
+
 # ISO 8601 Date Format. Accept no substitutes! 
 $iso8601 = Get-Date -Format s
 # Colon (:) isn't a valid character in file names.
