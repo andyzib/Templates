@@ -156,4 +156,4 @@ Logic, flow, etc.
  
 End Pseudocode #>
 
-End-Transcript
+Stop-Transcript
