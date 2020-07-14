@@ -1,4 +1,5 @@
 #requires -version 5
+#region - Comment Based Help
 <#
 .SYNOPSIS
 <Overview of script>
@@ -23,8 +24,9 @@ YYYY-DD-MM: Initial script development
 .EXAMPLE
 <Example goes here. Repeat this attribute for more than one example>
 #>
- 
-#-------------[Parameters]-----------------------------------------------------
+#endregion - Comment Based Help
+
+#region - Parameters
 # Enable -Debug, -Verbose Parameters. Write-Debug and Write-Verbose!
 #[CmdletBinding()]
  
@@ -69,9 +71,9 @@ Param (
     [string]$Param1
 )
 #>
-
+#endregion - Parameters
  
-#-------------[Parameter Validation]-------------------------------------------
+#region - Additional Parameter Validation and Cleanup
 # Sanitize User Input
  
 <#
@@ -97,15 +99,25 @@ if (-Not (Test-Path -PathType Container -Path $outdir)) {
 # https://gallery.technet.microsoft.com/scriptcenter/Remove-Invalid-Characters-39fa17b1
 $outstring = [RegEx]::Replace($outstring, "[{0}]" -f ([RegEx]::Escape([String][System.IO.Path]::GetInvalidFileNameChars())), '')
 #>
- 
-#-------------[Initializations]------------------------------------------------
+#endregion - Additional Parameter Validation and Cleanup
+
+#region - Initializations
  
 #Set Error Action to Silently Continue
 #$ErrorActionPreference = "SilentlyContinue"
  
 #Import-Module activedirectory -ErrorAction Stop
- 
-#-------------[Declarations]---------------------------------------------------
+
+# Speed up Invoke-WebRequest in PowerShell 5. Not needed in 6 and up. 
+<#
+If ($PSVersionTable.PSVersion.Major -eq 5) {
+  $ProgressPreference = 'SilentlyContinue'
+}
+#>
+
+#endregion - Initializations
+
+#regioin - Declarations
 
 # ISO 8601 Date Format. Accept no substitutes! 
 $iso8601 = Get-Date -Format s
@@ -113,42 +125,103 @@ $iso8601 = Get-Date -Format s
 $iso8601 = $iso8601.Replace(":","_")
 # Just YYYY-MM-DD
 #$datestamp = $iso8601.Substring(0,10)
- 
-#-------------[Functions]------------------------------------------------------
+
+# Cross platform path for transcript file for PowerShell 6, 7, and hopefully beyond. 
+# On a non-domain joined Windows PC, this is C:\Users\Username\YYYY-MM-DDTHH-MM-SS_PowershellTranscript.txt
+# For Mac/Linux this will be ~/YYYY-MM-DDTHH-MM-SS_PowershellTranscript.txt
+if ($PSVersionTable.PSVersion.Major -gt 5) {
+  if (-Not $IsWindows) {
+      $MyHome = $env:HOME # Linux and MacOS
+  } else {
+      $MyHome = Join-Path -Path $env:HOMEDRIVE -ChildPath $env:HOMEPATH # Windows
+  }
+} else {
+  $MyHome = Join-Path -Path $env:HOMEDRIVE -ChildPath $env:HOMEPATH # Windows
+}
+$TranscriptFile = Join-Path -Path $MyHome -ChildPath "$($iso8601)_PowershellTranscript.txt"
+
+
+#endregioin - Declarations
+
+#region - Functions
  
 <#
  
 Function <FunctionName>{
   Param()
- 
-  Begin{
-    Log-Write -LogPath $sLogFile -LineValue "<description of what is going on>..."
-  }
- 
-  Process{
-    Try{
-      <code goes here>
-    }
-   
-    Catch{
-      Log-Error -LogPath $sLogFile -ErrorDesc $_.Exception -ExitGracefully $True
-      Break
-    }
-  }
- 
-  End{
-    If($?){
-      Log-Write -LogPath $sLogFile -LineValue "Completed Successfully."
-      Log-Write -LogPath $sLogFile -LineValue " "
-    }
-  }
-}
- 
 #>
+
+# Make sure we stop the PowerShell Transcript and display it if needed. 
+# Also reduce code redundancy. 
+Function Invoke-CleanExit {
+  <#
+  .SYNOPSIS
+  Exits the script cleanly, showing exit message and stoping and showing the transcript.
+  
+  .DESCRIPTION
+  Exits the script cleanly, showing exit message and stoping and showing the transcript.
+  
+  .PARAMETER Messages
+  One or more messages strings to display. Separate mutiple strings with a comma: Example: "MessageOne","MessageTwo"
+  
+  .PARAMETER OutputObject
+  If passed, this will be writtn to the console with Write-Output. 
+
+  .PARAMETER ExitOnError
+  Switch parameter. Use when exiting on an error. 
+  
+  .EXAMPLE
+  Invoke-CleanExit -Messages "Unable to process your request.","The operation failed" -OutputObject $result -ExitOnError
+  #>    
+  Param(
+      [Parameter(Mandatory=$true,
+      Position=0)]
+      [alias("Message")]
+      [string[]]$Messages, # [String[]] allows for an array of strings. 
+      [Parameter(Mandatory=$false,
+      Position=1)]
+      $OutputObject=$null, # Object that will be written to the console. Not specifiying type. 
+      [Parameter(Mandatory=$false,
+      Position=2)]
+      [Switch]$ExitOnError=$false, # Use this when exiting on an error.
+      [Parameter(Mandatory=$false,
+      Position=3)]
+      [Switch]$ShowTranscript=$false
+  )
+  if ($ExitOnError) { $Color = 'Red' }
+  else { $Color = 'Green' }
+
+  Foreach ($Message in $Messages) {
+      Write-Host $Message -ForegroundColor $Color
+  }
+
+  if ($ExitOnError) {
+      Write-Host "Unable to continue." -ForegroundColor $Color
+  }
+
+  if ($null -ne $OutputObject) {
+      if ($null -ne $result.StatusCode) {
+          Write-Host "HTTP Status $($OutputObject.StatusCode): $($OutputObject.StatusDescription)" -ForegroundColor $Color
+      }
+      Write-Host "Dumping result to console and exiting." -ForegroundColor $Color
+      Write-Output $OutputObject
+  }
+
+  Stop-Transcript
+  if ($ShowTranscript) { 
+      if (Test-Path -Path $TranscriptFile) { # Make sure the file exists as I might have commented out the Start-Transcript line. 
+          Invoke-Item -Path $TranscriptFile # Opens the text file in default application. 
+      }
+  }
+  # Exit
+  Exit
+}
+
+#endregion - Functions
+
+#region - Execution
  
-#-------------[Execution]------------------------------------------------------
- 
-Start-Transcript -Path "$($env:USERPROFILE) + \$($iso8601)_PowershellTranscript.txt"
+Start-Transcript -Path $TranscriptFile
  
 <# Pseudocode
  
@@ -157,3 +230,4 @@ Logic, flow, etc.
 End Pseudocode #>
 
 Stop-Transcript
+#endregion - Execution
