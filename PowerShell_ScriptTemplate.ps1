@@ -1,5 +1,22 @@
 #requires -version 5
+#region - about_requires
+<#
+https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_requires
+#Requires -Version <N>[.<n>]
+#Requires -PSSnapin <PSSnapin-Name> [-Version <N>[.<n>]]
+#Requires -Modules { <Module-Name> | <Hashtable> }
+#Requires -PSEdition <PSEdition-Name>
+#Requires -ShellId <ShellId> -PSSnapin <PSSnapin-Name> [-Version <N>[.<n>]]
+#Requires -RunAsAdministrator
+#>
+#endregion - about_requires
+
+#region - Github
+# Latest version of this template can be found at https://github.com/andyzib/Templates
+#endregion - Github
+
 #region - Comment Based Help
+# https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comment_based_help
 <#
 .SYNOPSIS
 <Overview of script>
@@ -18,8 +35,7 @@
  
 .NOTES
 Author: <Name> <email>
-Change History: 
-YYYY-DD-MM: Initial script development
+
  
 .EXAMPLE
 <Example goes here. Repeat this attribute for more than one example>
@@ -30,7 +46,7 @@ YYYY-DD-MM: Initial script development
 # Enable -Debug, -Verbose Parameters. Write-Debug and Write-Verbose!
 #[CmdletBinding()]
  
-# Advanced Parameters: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters?view=powershell-6
+# Advanced Parameters: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters
 # Be sure to edit this to meet the validatations required as the allows and validate lines below may conflict with each other.  
 <#
 Param (
@@ -138,7 +154,8 @@ if ($PSVersionTable.PSVersion.Major -gt 5) {
 } else {
   $MyHome = Join-Path -Path $env:HOMEDRIVE -ChildPath $env:HOMEPATH # Windows
 }
-$TranscriptFile = Join-Path -Path $MyHome -ChildPath "$($iso8601)_PowershellTranscript.txt"
+$MyScriptName = (Split-Path -Path $PSCommandPath -Leaf).Replace(".ps1","")
+$TranscriptFile = Join-Path -Path $MyHome -ChildPath "$($iso8601)_$($MyScriptName).txt"
 
 
 #endregioin - Declarations
